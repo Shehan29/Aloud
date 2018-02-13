@@ -2,6 +2,7 @@ import { CameraPreview, CameraPreviewPictureOptions, CameraPreviewOptions } from
 import {Component} from "@angular/core";
 import { AndroidPermissions } from '@ionic-native/android-permissions';
 import { GoogleCloudVisionServiceProvider } from '../../providers/google-cloud-vision-service/google-cloud-vision-service';
+import { TextToSpeech } from '@ionic-native/text-to-speech';
 import { AlertController } from 'ionic-angular';
 
 @Component({
@@ -10,16 +11,16 @@ import { AlertController } from 'ionic-angular';
 })
 
 export class HomePage {
-  constructor(private cameraPreview: CameraPreview, private vision: GoogleCloudVisionServiceProvider, private alertCtrl: AlertController, private androidPermissions: AndroidPermissions) {
+  constructor(private cameraPreview: CameraPreview, private vision: GoogleCloudVisionServiceProvider, private tts: TextToSpeech, private alertCtrl: AlertController, private androidPermissions: AndroidPermissions) {
     this.initializePreview();
     this.checkPermissions();
   }
 
   cameraPreviewOpts: CameraPreviewOptions = {
     x: 0,
-    y: 0,
+    y: 50,
     width: window.screen.width,
-    height: window.screen.height,
+    height: window.screen.height-100,
     camera: 'rear',
     tapPhoto: true,
     previewDrag: true,
@@ -65,13 +66,20 @@ export class HomePage {
   takePicture() {
     this.cameraPreview.takePicture(this.pictureOpts).then((imageData) => {
       return this.vision.getText(imageData).subscribe((result) => {
-        this.presentAlert('Vision API Response', this.getText(result));
+        const text = this.getText(result);
+        this.presentAlert('Vision API Response', text);
+        this.read(text);
       }, err => {
         this.presentAlert("API CALL FAILED", err.message.toString());
       });
     }, (err) => {
       this.presentAlert("IMAGE CAPTURE FAILED", err.message.toString());
     });
+  }
+
+  // read text
+  read(text) {
+    this.tts.speak(text).then(() => console.log('Success')).catch((reason: any) => console.log(reason));
   }
 
   // present an alert to the user

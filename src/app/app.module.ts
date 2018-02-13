@@ -15,6 +15,7 @@ import { AndroidPermissions } from '@ionic-native/android-permissions';
 import { GoogleCloudVisionServiceProvider } from '../providers/google-cloud-vision-service/google-cloud-vision-service';
 import { HttpClient } from '@angular/common/http';
 import { HttpClientModule } from '@angular/common/http';
+import { TextToSpeech } from '@ionic-native/text-to-speech';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { HttpClientModule } from '@angular/common/http';
     AndroidPermissions,
     {provide: ErrorHandler, useClass: IonicErrorHandler},
     GoogleCloudVisionServiceProvider,
+    TextToSpeech,
     HttpClient
   ]
 })
