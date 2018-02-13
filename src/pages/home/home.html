@@ -1,12 +1,12 @@
 <ion-header>
   <ion-navbar>
-    <ion-title>Home</ion-title>
+    <ion-title>Aloud</ion-title>
   </ion-navbar>
 </ion-header>
 
-<ion-content padding (click) = "takePicture()">
+<ion-content padding>
   <ion-fab right bottom>
-    <button ion-fab color="primary">
+    <button ion-fab color="primary" (click) = "takePicture()">
       <ion-icon name="md-camera"></ion-icon>
     </button>
   </ion-fab>
