@@ -39,15 +39,12 @@ export class HomePage {
 
   // start camera
   initializePreview(){
-    this.cameraPreview.startCamera(this.cameraPreviewOpts).then(
-      (res) => {console.log(res)},
-      (err) => {console.log(err)}
-    );
+    this.cameraPreview.startCamera(this.cameraPreviewOpts).then(res => console.log(res), err => console.log(err));
   }
 
   // check permissions for camera use
   checkPermissions(){
-    this.androidPermissions.requestPermissions([this.androidPermissions.PERMISSION.CAMERA, this.androidPermissions.PERMISSION.GET_ACCOUNTS]);
+    this.androidPermissions.requestPermissions([this.androidPermissions.PERMISSION.CAMERA.toString()]);
     this.speechRecognition.requestPermission().then(() => console.log('Granted'), () => console.log('Denied'));
   }
 
@@ -78,7 +75,7 @@ export class HomePage {
 
   // read text
   read(text) {
-    this.tts.speak(text.replace(/(\r\n|\n|\r)/gm,"")).then(() => console.log('Success')).catch((reason: any) => console.log(reason));
+    this.tts.speak(text.replace(/(\r\n|\n|\r)/gm,"").toLowerCase()).then(() => console.log('Success')).catch((error: any) => this.presentAlert("Speaking Failed", error));
   }
 
   // listen to user
@@ -87,14 +84,13 @@ export class HomePage {
       language: 'en-US',
       showPopup: false,
       matches: 1
-    }
+    };
     this.speechRecognition.startListening(options).subscribe((matches: Array<string>) => {
-      if (matches.length != 0) {
+      try {
         const phrase = matches[0];
         const lastWord = phrase.split(" ").splice(-1)[0];
-        this.presentAlert(lastWord, matches.toString());
-        //this.define(lastWord);
-      } else {
+        this.define(lastWord).then((definition) => this.read(`${lastWord} is ${definition}`));
+      } catch (e) {
         this.read("Sorry, I didn't understand what you said.")
       }
     },
@@ -104,23 +100,24 @@ export class HomePage {
 
   // define a word
   define(word) {
-    let headers = new HttpHeaders().set('Accept', 'application/json').set('app_id', '878adc7c').set('app_key', '8d60dc910e5e73f09022001726bfff28');
+    return new Promise( (resolve, reject) => {
+      let headers = new HttpHeaders().set('Accept', 'application/json').set('app_id', '878adc7c').set('app_key', '8d60dc910e5e73f09022001726bfff28');
 
-    this.http.get(`https://od-api.oxforddictionaries.com:443/api/v1/entries/en/${word}`, { headers }).subscribe(response => {
+      this.http.get(`https://od-api.oxforddictionaries.com:443/api/v1/entries/en/${word}`, {headers}).subscribe(response => {
         try {
           const senses = response["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0];
           // this.presentAlert("Definition", JSON.stringify(senses));
 
           const definition = senses["definitions"][0];
           // const example = senses["examples"][0]["text"];
-          this.presentAlert("Definition", definition);
-
+          resolve(definition);
         } catch (e) {
-          this.presentAlert("JSON Fail", e);
+          reject(this.presentAlert("JSON Fail", e));
         }
       }, error => {
-      this.presentAlert("API FAIL", error);
+        reject(this.presentAlert("API FAIL", error));
       });
+    });
   }
 
   // present an alert to the user
