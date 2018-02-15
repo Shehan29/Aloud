@@ -1,9 +1,12 @@
 import { CameraPreview, CameraPreviewPictureOptions, CameraPreviewOptions } from '@ionic-native/camera-preview';
-import {Component} from "@angular/core";
+import { Component } from "@angular/core";
+import { AlertController } from 'ionic-angular';
 import { AndroidPermissions } from '@ionic-native/android-permissions';
 import { GoogleCloudVisionServiceProvider } from '../../providers/google-cloud-vision-service/google-cloud-vision-service';
 import { TextToSpeech } from '@ionic-native/text-to-speech';
-import { AlertController } from 'ionic-angular';
+import { SpeechRecognition } from '@ionic-native/speech-recognition';
+import { HttpClient } from '@angular/common/http';
+import { HttpHeaders} from '@angular/common/http';
 
 @Component({
   selector: 'page-home',
@@ -11,7 +14,7 @@ import { AlertController } from 'ionic-angular';
 })
 
 export class HomePage {
-  constructor(private cameraPreview: CameraPreview, private vision: GoogleCloudVisionServiceProvider, private tts: TextToSpeech, private alertCtrl: AlertController, private androidPermissions: AndroidPermissions) {
+  constructor(private cameraPreview: CameraPreview, private vision: GoogleCloudVisionServiceProvider, private tts: TextToSpeech, private speechRecognition: SpeechRecognition, private http: HttpClient, private alertCtrl: AlertController, private androidPermissions: AndroidPermissions) {
     this.initializePreview();
     this.checkPermissions();
   }
@@ -44,12 +47,8 @@ export class HomePage {
 
   // check permissions for camera use
   checkPermissions(){
-    this.androidPermissions.checkPermission(this.androidPermissions.PERMISSION.CAMERA).then(
-      result => console.log('Has permission?',result.hasPermission),
-      err => this.androidPermissions.requestPermission(this.androidPermissions.PERMISSION.CAMERA)
-    );
-
     this.androidPermissions.requestPermissions([this.androidPermissions.PERMISSION.CAMERA, this.androidPermissions.PERMISSION.GET_ACCOUNTS]);
+    this.speechRecognition.requestPermission().then(() => console.log('Granted'), () => console.log('Denied'));
   }
 
   // extract text from json response sent by vision api
@@ -79,7 +78,49 @@ export class HomePage {
 
   // read text
   read(text) {
-    this.tts.speak(text).then(() => console.log('Success')).catch((reason: any) => console.log(reason));
+    this.tts.speak(text.replace(/(\r\n|\n|\r)/gm,"")).then(() => console.log('Success')).catch((reason: any) => console.log(reason));
+  }
+
+  // listen to user
+  listen() {
+    let options = {
+      language: 'en-US',
+      showPopup: false,
+      matches: 1
+    }
+    this.speechRecognition.startListening(options).subscribe((matches: Array<string>) => {
+      if (matches.length != 0) {
+        const phrase = matches[0];
+        const lastWord = phrase.split(" ").splice(-1)[0];
+        this.presentAlert(lastWord, matches.toString());
+        //this.define(lastWord);
+      } else {
+        this.read("Sorry, I didn't understand what you said.")
+      }
+    },
+      (error) => this.presentAlert("SpeechRecognition Failed", error)
+    );
+  }
+
+  // define a word
+  define(word) {
+    let headers = new HttpHeaders().set('Accept', 'application/json').set('app_id', '878adc7c').set('app_key', '8d60dc910e5e73f09022001726bfff28');
+
+    this.http.get(`https://od-api.oxforddictionaries.com:443/api/v1/entries/en/${word}`, { headers }).subscribe(response => {
+        try {
+          const senses = response["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0];
+          // this.presentAlert("Definition", JSON.stringify(senses));
+
+          const definition = senses["definitions"][0];
+          // const example = senses["examples"][0]["text"];
+          this.presentAlert("Definition", definition);
+
+        } catch (e) {
+          this.presentAlert("JSON Fail", e);
+        }
+      }, error => {
+      this.presentAlert("API FAIL", error);
+      });
   }
 
   // present an alert to the user

@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 @Injectable()
 export class GoogleCloudVisionServiceProvider {
 
-  constructor(public http: HttpClient) {
+  constructor(private http: HttpClient) {
     console.log('Hello GoogleCloudVisionServiceProvider Provider');
   }
 

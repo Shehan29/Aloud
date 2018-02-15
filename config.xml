@@ -88,4 +88,5 @@
     <plugin name="cordova-plugin-tts" spec="^0.2.3" />
     <engine name="browser" spec="5.0.3" />
     <engine name="android" spec="7.0.0" />
+    <plugin name="cordova-plugin-speechrecognition" spec="^1.2.0" />
 </widget>

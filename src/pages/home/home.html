@@ -1,6 +1,6 @@
 <ion-header>
   <ion-navbar>
-    <ion-title>Aloud</ion-title>
+    <ion-title text-center>Aloud</ion-title>
   </ion-navbar>
 </ion-header>
 
@@ -8,6 +8,11 @@
   <ion-fab right bottom>
     <button ion-fab color="primary" (click) = "takePicture()">
       <ion-icon name="md-camera"></ion-icon>
+    </button>
+  </ion-fab>
+  <ion-fab left bottom>
+    <button ion-fab color="secondary" (click) = "listen()">
+      <ion-icon name="md-mic"></ion-icon>
     </button>
   </ion-fab>
 </ion-content>
