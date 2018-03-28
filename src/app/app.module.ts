@@ -10,6 +10,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { CameraPreview } from "@ionic-native/camera-preview";
 import { AndroidPermissions } from '@ionic-native/android-permissions';
 import { GoogleCloudVisionServiceProvider } from '../providers/google-cloud-vision-service/google-cloud-vision-service';
+import { WatsonAssistantProvider } from '../providers/watson-assistant-service/watson-assistant-service';
 import { HttpClient } from '@angular/common/http';
 import { HttpClientModule } from '@angular/common/http';
 import { TextToSpeech } from '@ionic-native/text-to-speech';
@@ -38,6 +39,7 @@ import { SpeechRecognition } from '@ionic-native/speech-recognition';
     AndroidPermissions,
     HttpClient,
     GoogleCloudVisionServiceProvider,
+    WatsonAssistantProvider,
     TextToSpeech,
     SpeechRecognition
   ]

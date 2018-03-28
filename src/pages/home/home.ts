@@ -3,6 +3,7 @@ import { Component } from "@angular/core";
 import { AlertController } from 'ionic-angular';
 import { AndroidPermissions } from '@ionic-native/android-permissions';
 import { GoogleCloudVisionServiceProvider } from '../../providers/google-cloud-vision-service/google-cloud-vision-service';
+import { WatsonAssistantProvider } from '../../providers/watson-assistant-service/watson-assistant-service';
 import { TextToSpeech } from '@ionic-native/text-to-speech';
 import { SpeechRecognition } from '@ionic-native/speech-recognition';
 import { HttpClient } from '@angular/common/http';
@@ -14,7 +15,7 @@ import { HttpHeaders} from '@angular/common/http';
 })
 
 export class HomePage {
-  constructor(private cameraPreview: CameraPreview, private vision: GoogleCloudVisionServiceProvider, private tts: TextToSpeech, private speechRecognition: SpeechRecognition, private http: HttpClient, private alertCtrl: AlertController, private androidPermissions: AndroidPermissions) {
+  constructor(private cameraPreview: CameraPreview, private vision: GoogleCloudVisionServiceProvider, private assistant: WatsonAssistantProvider, private tts: TextToSpeech, private speechRecognition: SpeechRecognition, private http: HttpClient, private alertCtrl: AlertController, private androidPermissions: AndroidPermissions) {
     this.initializePreview();
     this.checkPermissions();
   }
@@ -78,24 +79,54 @@ export class HomePage {
     this.tts.speak(text.replace(/(\r\n|\n|\r)/gm,"").toLowerCase()).then(() => console.log('Success')).catch((error: any) => this.presentAlert("Speaking Failed", error));
   }
 
-  // listen to user
-  listen() {
-    let options = {
+  defineWord = false;
+  readPage = false;
+  speechOptions = {
       language: 'en-US',
       showPopup: false,
       matches: 1
-    };
-    this.speechRecognition.startListening(options).subscribe((matches: Array<string>) => {
+  };
+
+  // listen to user
+  listen() {
+    this.speechRecognition.startListening(this.speechOptions).subscribe((matches: Array<string>) => {
       try {
         const phrase = matches[0];
-        const lastWord = phrase.split(" ").splice(-1)[0];
-        this.define(lastWord).then((definition) => this.read(`${lastWord} is ${definition}`));
+        if (this.defineWord) {
+          this.defineWord = false;
+          const lastWord = phrase.split(" ").splice(-1)[0];
+          this.define(lastWord).then((definition) => this.read(`${lastWord} is ${definition}`));
+        } else {
+          this.conversate(phrase).then(response => {
+            if (this.readPage) {
+              this.takePicture();
+            } else {
+              this.read(response);
+            }
+          });
+        }
       } catch (e) {
-        this.read("Sorry, I didn't understand what you said.")
+        this.read(e.toString())
       }
     },
       (error) => this.presentAlert("SpeechRecognition Failed", error)
     );
+  }
+
+  // conversate
+  conversate(message) {
+    return new Promise((resolve, reject) => {
+      this.assistant.conversate(message).then(response => {
+          this.presentAlert("Conversation", response);
+          this.defineWord = (response === 'What word would you like me to define?');
+          this.readPage = (response === 'Reading');
+          resolve(response);
+        },
+        error => {
+          this.presentAlert("Watson API Error", error);
+          reject(error);
+        });
+    });
   }
 
   // define a word
@@ -109,7 +140,6 @@ export class HomePage {
           // this.presentAlert("Definition", JSON.stringify(senses));
 
           const definition = senses["definitions"][0];
-          // const example = senses["examples"][0]["text"];
           resolve(definition);
         } catch (e) {
           reject(this.presentAlert("JSON Fail", e));
@@ -120,13 +150,17 @@ export class HomePage {
     });
   }
 
+  debug = false;
+
   // present an alert to the user
   presentAlert(title, message) {
-    let alert = this.alertCtrl.create({
-      title: title,
-      subTitle: message,
-      buttons: ['Dismiss']
-    });
-    alert.present();
+    if (this.debug) {
+      let alert = this.alertCtrl.create({
+        title: title,
+        subTitle: message,
+        buttons: ['Dismiss']
+      });
+      alert.present();
+    }
   }
 }
