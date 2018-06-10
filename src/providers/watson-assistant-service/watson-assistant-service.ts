@@ -8,7 +8,7 @@ export class WatsonAssistantProvider {
     console.log('Hello Watson Provider');
   }
 
-  link = "http://192.168.0.22:3000/message";
+  link = "http://192.168.1.138:3000/message";
 
   conversate(text) {
     return new Promise((resolve, reject) => {

@@ -5,8 +5,9 @@
   "homepage": "http://ionicframework.com/",
   "private": true,
   "scripts": {
+    "server": "node backend/server.js",
     "clean": "ionic-app-scripts clean",
-    "build": "ionic-app-scripts build",
+    "build": "ionic cordova run android",
     "lint": "ionic-app-scripts lint",
     "ionic:build": "ionic-app-scripts build",
     "ionic:serve": "ionic-app-scripts serve"

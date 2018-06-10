@@ -41,7 +41,7 @@ app.get('/message', function(req,res){
     else {
       console.log("Response: " + JSON.stringify(response));
       contextObject = response.context;
-      contextMapping[id] = contextObject;
+      contextMapping[id] = contextObject; // keep track of context for next query
       const output = {
         output: response.output.text[0]
       };

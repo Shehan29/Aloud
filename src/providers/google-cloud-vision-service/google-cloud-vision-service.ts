@@ -8,7 +8,8 @@ export class GoogleCloudVisionServiceProvider {
     console.log('Hello GoogleCloudVisionServiceProvider Provider');
   }
 
-  getText(imageData) {
+  // get response from API
+  getResponse(imageData) {
     const base64Image = imageData.toString('base64');
     const body = {
       "requests": [
@@ -26,5 +27,15 @@ export class GoogleCloudVisionServiceProvider {
     };
     const key = "AIzaSyD9Cudvk4q-h2FYkpMUM8hc6h0ckrP3MsU";
     return this.http.post('https://vision.googleapis.com/v1/images:annotate?key=' + key, body);
+  }
+
+  // extract text from json response sent by API
+  getText(result) {
+    try {
+      const responses = result["responses"][0];
+      return responses["textAnnotations"][0]["description"].toString();
+    } catch (e) {
+      return "No text detected";
+    }
   }
 }
